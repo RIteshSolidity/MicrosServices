@@ -1,0 +1,82 @@
+
+
+
+az login
+az account set -s f0bb4697-5b29-46cc-8fc9-a4e5ac7800dc
+az group create --name mclassaksdemo --location "West europe"
+az ad sp create-for-rbac --skip-assignment
+
+az acr create -n mclassaksacr -g mclassaksdemo --sku standard --admin-enabled --location "West europe" --verbose
+
+
+docker login mclassaksacr.azurecr.io  -u mclassaksacr -p qTRNab/SLh4kQKWVzVjBLmkajMJTi6E5
+docker images
+docker tag orderwrite:latest mclassaksacr.azurecr.io/orderwrite:latest
+docker push mclassaksacr.azurecr.io/orderwrite:latest
+
+az role assignment create --assignee 5d36e01a-58f5-40ee-8fa6-e9babef7cd03  --scope /subscriptions/f0bb4697-5b29-46cc-8fc9-a4e5ac7800dc/resourceGroups/mclassaksdemo/providers/Microsoft.ContainerRegistry/registries/mclassaksacr --role acrpull
+
+
+
+
+az aks create -g mclassaksdemo --name aksmclass --location "West europe" --generate-ssh-keys --kubernetes-version 1.14.7 --node-count 2 --service-principal 5d36e01a-58f5-40ee-8fa6-e9babef7cd03 --client-secret 55badda0-ddac-4882-b127-616785657b4b --network-plugin azure --enable-addons monitoring --load-balancer-sku standard --vm-set-type VirtualMachineScaleSets --verbose
+
+az aks install-cli
+az aks get-credentials -g mclassaksdemo -n aksmclass
+
+
+
+
+
+
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: mssamplesbook4
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mssample-kub-app4
+    spec:
+      containers:
+        - name: mssample-services-app4
+          image: mclassaksacr.azurecr.io/orderwrite:latest
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: mssample-kub-app4
+spec:
+  ports:
+    - name: http-port
+      port: 80
+      targetPort: 80
+  selector:
+    app: mssample-kub-app4
+  type: LoadBalancer
+
+
+
+
+
+
+
+
+
+kubectl get pods
+
+kubectl get nodes
+
+kubectl apply -f "C:\\df\\aks-first.yml"
+
+kubectl scale deployment mssamplesbook4 --replicas 3
+
+kubectl autoscale deployment mssamplesbook4 --min 3 --max 5 --cpu-percent=2
+
+kubectl scale deployment mssamplesbook4 --replicas 1
+
+kubectl get pods
