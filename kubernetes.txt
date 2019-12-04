@@ -42,7 +42,7 @@ spec:
     spec:
       containers:
         - name: mssample-services-app4
-          image: mclassaksacr.azurecr.io/orderwrite:latest
+          image: nginx:1.15.5
           ports:
             - containerPort: 80
 ---
